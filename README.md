@@ -71,6 +71,8 @@ Saved best_bert.pth
 ```
 
 3.预测结果
+
+3.1 Bert模型
 ```bash
 python predict.py --model_type bert --checkpoint_path best_bert.pth
 ```
@@ -87,6 +89,22 @@ You should probably TRAIN this model on a down-stream task to be able to use it 
 
 输入：你这人真聪明，一点都不笨。
  → 预测：反讽，置信度：1.00
+```
+3.2 T5模型
+```bash
+python predict.py --model_type t5 --checkpoint_path best_t5_model
+```
+
+```bash
+Using device: mps
+输入：你好棒棒哦，椎间盘都没有你突出。
+ → 预测：非反讽
+
+输入：今天天气真好。
+ → 预测：非反讽
+
+输入：你这人真聪明，一点都不笨。
+ → 预测：非反讽
 ```
 
 
