@@ -76,7 +76,6 @@ python predict.py --model_type bert --checkpoint_path best_bert.pth
 ```
 
 ```bash
-# 输出
 Using device: mps
 Some weights of BertForSequenceClassification were not initialized from the model checkpoint at bert-base-chinese and are newly initialized: ['classifier.bias', 'classifier.weight']
 You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
