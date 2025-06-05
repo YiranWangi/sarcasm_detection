@@ -4,16 +4,16 @@
 
 ## 项目结构
 
-每个模块都已拆分到不同文件，目录结构如下：
-sarcasm_detection/ 
-├── README.md # 项目说明文件（当前文件）
-├── device.py # 设备选择工具（支持 MPS / CPU）
-├── bert_classifier.py # 使用 Hugging Face Transformers 的 BERT 分类器封装
-├── t5_classifier.py # 基于 T5/MT5 的分类器封装，适用于文本生成式分类任务 
-├── advanced_models.py # 自定义的高级模型定义（BERT+CRF、BERT+CNN 等）
-├── train_bert.py # 训练 BERT 分类器的脚本（包含数据加载、训练、验证到保存）
-├── train_t5.py # 训练 T5/MT5 分类器的脚本（包含数据加载、训练、验证到保存）
-└── predict.py # 各种模型的推理示例 
+每个模块都已拆分到不同文件，目录结构如下：        
+sarcasm_detection/          
+├── README.md # 项目说明文件（当前文件）       
+├── device.py # 设备选择工具（支持 MPS / CPU）       
+├── bert_classifier.py # 使用 Hugging Face Transformers 的 BERT 分类器封装       
+├── t5_classifier.py # 基于 T5/MT5 的分类器封装，适用于文本生成式分类任务          
+├── advanced_models.py # 自定义的高级模型定义（BERT+CRF、BERT+CNN 等）         
+├── train_bert.py # 训练 BERT 分类器的脚本（包含数据加载、训练、验证到保存）         
+├── train_t5.py # 训练 T5/MT5 分类器的脚本（包含数据加载、训练、验证到保存）      
+└── predict.py # 各种模型的推理示例       
 
 ## 环境依赖
 
@@ -27,6 +27,7 @@ pip install -r requirements.txt
 text：待分类的句子文本  
 label：整数标签（0 表示“非反讽”，1 表示“反讽”）
 2. train_bert.py 与 train_t5.py 会自动读取该文件并进行数据切分（80% 训练 / 10% 验证 / 10% 测试，按照标签比例分层抽样）
+
 
 ## 输出示例
 1. T5模型
@@ -68,6 +69,27 @@ Epoch 3/3  Train Loss: 0.0002
 Validation Accuracy: 1.0000
 Saved best_bert.pth
 ```
+
+3.预测结果
+```bash
+python predict.py --model_type bert --checkpoint_path best_bert.pth
+```
+
+```bash
+# 输出
+Using device: mps
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at bert-base-chinese and are newly initialized: ['classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+输入：你好棒棒哦，椎间盘都没有你突出。
+ → 预测：反讽，置信度：1.00
+
+输入：今天天气真好。
+ → 预测：非反讽，置信度：1.00
+
+输入：你这人真聪明，一点都不笨。
+ → 预测：反讽，置信度：1.00
+```
+
 
 ## 联系方式
 如有问题或建议，可联系项目作者：
