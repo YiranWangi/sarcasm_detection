@@ -1,0 +1,15 @@
+torch==2.7.0
+transformers==4.52.4
+pandas==2.2.2
+scikit-image==0.24.0
+scikit-learn==1.5.1
+numpy==1.26.4
+numpydoc==1.7.0
+openpyxl==3.1.5
+packaging==24.1
+pandas==2.2.2
+pip==24.2
+torch==2.7.0
+torchaudio==2.7.0
+torchvision==0.22.0
+
