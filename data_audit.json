@@ -1,0 +1,52 @@
+{
+  "data_sha256": "977af329b55de4374db62ad7ba84952f12de4e83c39d6cf820d73b46358d9700",
+  "seed": 42,
+  "original_rows": 4000,
+  "unique_texts": 20,
+  "duplicate_rows_removed": 3980,
+  "unique_label_counts": {
+    "1": 10,
+    "0": 10
+  },
+  "split_sizes": {
+    "train": 16,
+    "validation": 2,
+    "test": 2
+  },
+  "split_text_ids": {
+    "train": [
+      "26254d1f4b567eee7dcb06f53d0fed047375e2cf4098df04a4aaa192e039be21",
+      "3037b3e61b1c73bdb5a51befcaeb3732ac045755fe5ece970d508472d2e28d03",
+      "399fafab43ffcaf0db466d179601acd7ad16631ea6700644bed43495b0658a8f",
+      "4b0e2452bfc0fea777d090ab934d6f7211bae162bd411abb8fec9a519448181a",
+      "4b525a47089c96a77b886d680b5f90436b692739ea630008dbef4c65f8baa9d5",
+      "5ac4bd6fab73edf4c72b1d085aa383e4481be758375c12dda3d5b81af9282324",
+      "81851e054d8defeb3b8c77e8a53cf118f6bb274b35fba0b5b36d6d1d0b76413b",
+      "85add277df911a0c0bffc8852040b9363de424387316343864e781aef3be819d",
+      "922884fa0cdaf9f3c7c039a6ee62800f5b4dbfed265dc4da9221ece120ded65b",
+      "a12b5da3a9ced77a89bf0b633d261b831997d88d7e10519562c6006a3638903e",
+      "a4f19eee7b77da4ec3432c811c4ef01a1a966dfc56d8de93a1e6bdb5ec277baa",
+      "a810fa247223b8501669a41a9e36578e1395b5ab64d73337f33202f891aebb69",
+      "b3560c48e646f0e67b30918b437285eda8aaf2de7ba826b33a67e45a59b40a2b",
+      "bae4e2eadb27d8442f77b12b52a9aa37a534d52d4890199bef9723e44487bda9",
+      "c4268df4bf92e89e3a9fa33f56640bcf1ec597401421d9f95fa3a0f6cc4e1500",
+      "c85a5bf604264b8ee99bf4fd9f94d50d064424d1c7957ce313f592c56431ac48"
+    ],
+    "validation": [
+      "0087a5d9c43055e1694583a91a83361fc21a2f9fad063b3765cafe8a6402b9d0",
+      "9d97597f8c61f0865d5bc996ef3f3491bfa99c3f6c990cada2b4cedfddb51aac"
+    ],
+    "test": [
+      "12c4d2708449df69f36f7ef967ca3e64e246a0a29e95c287d8ced46c85572ca5",
+      "e0cba12e05d52a2ebe434576a5971b6d7657173c4fa04dd02ce5d52dba483a34"
+    ]
+  },
+  "normalization": "NFKC Unicode normalization, collapsed whitespace, outer whitespace stripped",
+  "pairwise_text_overlap": 0,
+  "legacy_split_overlap": {
+    "validation_rows_seen_in_training": 400,
+    "validation_rows": 400,
+    "test_rows_seen_in_training": 400,
+    "test_rows": 400
+  }
+}

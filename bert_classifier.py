@@ -1,51 +1,59 @@
+"""Chinese BERT sentence classification."""
+
+from pathlib import Path
+
 import torch
 from transformers import BertTokenizer, BertForSequenceClassification
 
+from device import get_default_device
+from labels import ID_TO_LABEL, LABEL_TO_ID
+
+
 class BertSarcasmClassifier:
     def __init__(self, model_name="bert-base-chinese", num_labels=2, device=None):
-        """
-        初始化：加载 tokenizer 与预训练模型，并将其移动到指定 device 上。
-        """
+        if num_labels != 2:
+            raise ValueError("This task has two labels.")
+        self.device = torch.device(device) if device is not None else get_default_device()
         self.tokenizer = BertTokenizer.from_pretrained(model_name)
-        self.model = BertForSequenceClassification.from_pretrained(model_name, num_labels=num_labels)
-        if device is not None:
-            self.model.to(device)
-        self.device = device
+        self.model = BertForSequenceClassification.from_pretrained(
+            model_name, num_labels=2, id2label=ID_TO_LABEL, label2id=LABEL_TO_ID
+        ).to(self.device)
 
-    def predict(self, sentence: str, max_length: int = 32):
-        """
-        对单条句子做推理，返回标签（“反讽”/“非反讽”）以及置信度。
-        """
+    def _probabilities(self, texts, max_length):
         encoding = self.tokenizer(
-            sentence,
-            return_tensors="pt",
-            padding="max_length",
-            truncation=True,
-            max_length=max_length
+            texts, return_tensors="pt", padding=True,
+            truncation=True, max_length=max_length
         )
-        input_ids = encoding["input_ids"].to(self.device)
-        attention_mask = encoding["attention_mask"].to(self.device)
-
+        encoding = {key: value.to(self.device) for key, value in encoding.items()}
         self.model.eval()
-        with torch.no_grad():
-            outputs = self.model(input_ids=input_ids, attention_mask=attention_mask)
-            logits = outputs.logits  # shape: (1, 2)
-            probs = torch.softmax(logits, dim=-1)
-            pred = torch.argmax(probs, dim=-1).item()
-            confidence = probs[0][pred].item()
+        with torch.inference_mode():
+            return torch.softmax(self.model(**encoding).logits, dim=-1).cpu()
 
-        label = "反讽" if pred == 1 else "非反讽"
-        return label, confidence
+    def predict_many(self, texts, max_length=64, num_beams=4):
+        if not texts:
+            return []
+        probabilities = self._probabilities(texts, max_length)
+        return [ID_TO_LABEL[index] for index in probabilities.argmax(dim=-1).tolist()]
 
-    def save(self, path: str):
-        """
-        保存模型权重到指定路径（只保存 state_dict）。
-        """
-        torch.save(self.model.state_dict(), path)
+    def predict(self, sentence, max_length=64):
+        probabilities = self._probabilities([sentence], max_length)[0]
+        index = int(probabilities.argmax())
+        return ID_TO_LABEL[index], float(probabilities[index])
 
-    def load(self, checkpoint_path: str):
-        """
-        从 checkpoint 加载模型权重。
-        """
-        self.model.load_state_dict(torch.load(checkpoint_path, map_location=self.device))
-        self.model.to(self.device)
+    def save(self, path):
+        path = Path(path)
+        if path.suffix == ".pth":
+            torch.save(self.model.state_dict(), path)
+        else:
+            self.model.save_pretrained(path)
+            self.tokenizer.save_pretrained(path)
+
+    def load(self, checkpoint_path):
+        path = Path(checkpoint_path)
+        if path.is_dir():
+            self.tokenizer = BertTokenizer.from_pretrained(path)
+            self.model = BertForSequenceClassification.from_pretrained(path).to(self.device)
+        else:
+            state = torch.load(path, map_location=self.device, weights_only=True)
+            self.model.load_state_dict(state)
+            self.model.to(self.device)

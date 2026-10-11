@@ -1,10 +1,11 @@
+"""Select an available PyTorch device."""
+
 import torch
 
+
 def get_default_device():
-    """
-    在 macOS Apple Silicon 上使用 MPS；否则使用 CPU。
-    """
+    if torch.cuda.is_available():
+        return torch.device("cuda")
     if torch.backends.mps.is_available():
         return torch.device("mps")
-    else:
-        return torch.device("cpu")
+    return torch.device("cpu")

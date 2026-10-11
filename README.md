@@ -1,121 +1,68 @@
-# Sarcasm Detection Project
+# Chinese sarcasm classification
 
-本项目主要基于 BERT 和 T5 模型，实现中文（MT5）与英文（BERT）两种不同思路的讽刺（Sarcasm）检测（分类）任务。项目包括数据预处理、模型训练、评估以及推理代码，能够方便地复现训练流程并进行在线/离线推断。
+A learning project comparing Chinese BERT sentence classification with multilingual T5 label generation.
 
-## 项目结构
+- **BERT:** `bert-base-chinese`, with a two-class classification head.
+- **MT5:** `google/mt5-base`, trained to generate `非反讽` or `反讽`.
+- **Labels:** `0 = 非反讽` (non-sarcasm), `1 = 反讽` (sarcasm).
 
-每个模块都已拆分到不同文件，目录结构如下：        
-sarcasm_detection/          
-├── README.md # 项目说明文件（当前文件）       
-├── device.py # 设备选择工具（支持 MPS / CPU）       
-├── bert_classifier.py # 使用 Hugging Face Transformers 的 BERT 分类器封装       
-├── t5_classifier.py # 基于 T5/MT5 的分类器封装，适用于文本生成式分类任务          
-├── advanced_models.py # 自定义的高级模型定义（BERT+CRF、BERT+CNN 等）         
-├── train_bert.py # 训练 BERT 分类器的脚本（包含数据加载、训练、验证到保存）         
-├── train_t5.py # 训练 T5/MT5 分类器的脚本（包含数据加载、训练、验证到保存）      
-└── predict.py # 各种模型的推理示例       
+## Dataset and evaluation limits
 
-## 环境依赖
+The included `scrcasm_data.xlsx` has 4,000 rows but only **20 distinct texts**, with 10 texts per class. The original row-level split put copies of every validation and test text in the training set. The previously reported 100% validation accuracy therefore does not establish generalization.
 
-执行以下命令即可安装本项目所需的最小依赖（基于 `requirements.txt`）：
+The revised preprocessing normalizes Unicode and whitespace, rejects conflicting labels, removes duplicate texts, and then makes a stratified split with seed 42:
+
+| Split | Distinct texts |
+| --- | ---: |
+| Training | 16 |
+| Validation | 2 |
+| Test | 2 |
+
+See [data_audit.json](data_audit.json) for the file hash, split membership and original overlap counts. The workbook is preserved unchanged. A two-example test set is useful for checking the pipeline, but too small for a meaningful model comparison. Deduplication also does not rule out similarities between templates or sources.
+
+**This repository is a demonstration, not a validated sarcasm detector.** No new neural training results are reported here. A credible benchmark would need a larger dataset with documented provenance and annotation, source-aware splitting where applicable, and repeated runs.
+
+## Run
+
+Use Python 3.10 or 3.11 in a virtual environment. The first training run downloads pretrained weights from Hugging Face; MT5-base may need substantial memory.
+
 ```bash
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
+
+python audit_data.py --output data_audit.json
+python -m unittest discover -s tests -v
+python train_bert.py --output_dir runs/bert
+python train_t5.py --output_dir runs/t5
 ```
 
-## 数据准备
-1. 确保项目根目录下存在 scrcasm_data.xlsx，表格需包含两列：  
-text：待分类的句子文本  
-label：整数标签（0 表示“非反讽”，1 表示“反讽”）
-2. train_bert.py 与 train_t5.py 会自动读取该文件并进行数据切分（80% 训练 / 10% 验证 / 10% 测试，按照标签比例分层抽样）
+Both training scripts accept `--data_file`, `--seed`, `--epochs`, `--batch_size`, `--learning_rate`, `--max_length` and `--device cpu|cuda|mps`. MT5 generation also uses `--num_beams`. For another dataset, supply an Excel or CSV file with `text` and `label` columns and at least 10 distinct texts per class. Use a new output directory for each run.
 
+A run saves:
 
-## 输出示例
-1. T5模型
-```bash
-Reloaded modules: device, t5_classifier
-Train/Val/Test = 3200/400/400
-Using device: mps
-/opt/anaconda3/lib/python3.12/site-packages/transformers/tokenization_utils_base.py:3959: UserWarning: `as_target_tokenizer` is deprecated and will be removed in v5 of Transformers. You can tokenize your labels by using the argument `text_target` of the regular `__call__` method (either in the same call as your input texts if you use the same keyword arguments, or in a separate call.
-  warnings.warn(
-Epoch 1/10  Train Loss: 2.5135
-Validation Accuracy: 1.0000
-Epoch 2/10  Train Loss: 0.4929
-Validation Accuracy: 1.0000
-Epoch 3/10  Train Loss: 0.1916
-Validation Accuracy: 1.0000
-Epoch 4/10  Train Loss: 0.0209
-Validation Accuracy: 1.0000
-Epoch 5/10  Train Loss: 0.0089
-Validation Accuracy: 1.0000
-Epoch 6/10  Train Loss: 0.0075
-Validation Accuracy: 1.0000
-Epoch 7/10  Train Loss: 0.0034
-Validation Accuracy: 1.0000
-Epoch 8/10  Train Loss: 0.0013
-Validation Accuracy: 1.0000
-```
+| File | Purpose |
+| --- | --- |
+| `model/` | Model and tokenizer from the best validation epoch |
+| `training_config.json` | Parameters, dependency versions, data hash and split IDs |
+| `data_audit.json` | Duplicate counts and split audit |
+| `history.json` | Training loss and validation metrics by epoch |
+| `test_metrics.json` | Final held-out test accuracy, macro-F1, invalid rate and confusion matrix |
+| `test_predictions.csv` | Per-example test predictions |
 
-2. Bert模型
-```bash
-训练集样本数：3200，验证集样本数：400，测试集样本数：400
-Using device: mps
-Some weights of BertForSequenceClassification were not initialized from the model checkpoint at bert-base-chinese and are newly initialized: ['classifier.bias', 'classifier.weight']
-You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
-Epoch 1/3  Train Loss: 0.0574
-Validation Accuracy: 1.0000
-Epoch 2/3  Train Loss: 0.0006
-Validation Accuracy: 1.0000
-Epoch 3/3  Train Loss: 0.0002
-Validation Accuracy: 1.0000
-Saved best_bert.pth
-```
+Checkpoint selection uses validation macro-F1, breaking ties with accuracy. The test split is evaluated once after loading that checkpoint. Invalid MT5 answers are counted as errors and displayed as `未知`; they are never silently assigned to a class. MT5 target padding is excluded from the training loss.
 
-3.预测结果
-
-3.1 Bert模型
-```bash
-python predict.py --model_type bert --checkpoint_path best_bert.pth
-```
+## Predict
 
 ```bash
-Using device: mps
-Some weights of BertForSequenceClassification were not initialized from the model checkpoint at bert-base-chinese and are newly initialized: ['classifier.bias', 'classifier.weight']
-You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
-输入：你好棒棒哦，椎间盘都没有你突出。
- → 预测：反讽，置信度：1.00
-
-输入：今天天气真好。
- → 预测：非反讽，置信度：1.00
-
-输入：你这人真聪明，一点都不笨。
- → 预测：反讽，置信度：1.00
-```
-3.2 T5模型
-```bash
-python predict.py --model_type t5 --checkpoint_path best_t5_model
+python predict.py --model_type bert --checkpoint_path runs/bert/model --text "今天天气真好。"
+python predict.py --model_type t5 --checkpoint_path runs/t5/model --text "今天天气真好。"
 ```
 
-```bash
-Using device: mps
-输入：你好棒棒哦，椎间盘都没有你突出。
- → 预测：非反讽
+Prediction uses the saved training settings when available. BERT's displayed probability is a model output, not a calibrated confidence estimate. Legacy BERT `.pth` weights remain usable for inference, but should be retrained with the corrected split before any evaluation claim.
 
-输入：今天天气真好。
- → 预测：非反讽
+## Code
 
-输入：你这人真聪明，一点都不笨。
- → 预测：非反讽
-```
+`data_utils.py` handles validation and splitting; `training.py` runs both training paths; `evaluation.py` uses the same prediction methods as inference. Tests cover duplicate leakage, label consistency, invalid predictions and batch alignment. Optional offline model-wrapper tests require PyTorch and Transformers; they do not train or download a model.
 
-
-## 联系方式
-如有问题或建议，可联系项目作者：
-邮箱：yiran.wang@yale.edu
-GitHub：@YiranWangi
-
-
-
-
-
-
-
+`advanced_models.py` contains separate BERT-CNN and BERT-CRF experiments. They are not part of the comparison above; the CRF path also requires an optional `torchcrf` dependency.
